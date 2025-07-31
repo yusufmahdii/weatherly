@@ -55,7 +55,7 @@ async function getWeatherByCity(query) {
         // Get all weather data
         await Promise.all([
             updateWeatherData(lat, lon, name, country, state),
-            updateNearbyCities(lat, lon)
+            
         ]);
         
         
@@ -103,7 +103,7 @@ function getWeatherByLocation() {
                     // Get all weather data
                     await Promise.all([
                         updateWeatherData(latitude, longitude, name, country, state),
-                        updateNearbyCities(latitude, longitude)
+                        
                     ]);
                     
                     // Show notification for precipitation
@@ -124,12 +124,12 @@ function getWeatherByLocation() {
             (error) => {
                 console.error('Geolocation error:', error);
                 // Fallback to a default city if location access is denied or fails
-                getWeatherByCity("Kano");
+                getWeatherByCity("Abuja");
             }
         );
     } else {
         // Geolocation not supported - fallback to default city
-        getWeatherByCity("Kano");
+        getWeatherByCity("Abuja");
     }
 }
 

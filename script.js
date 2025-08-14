@@ -10,72 +10,117 @@ const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('search-btn');
 const locationBtn = document.getElementById('location-btn');
 const loading = document.getElementById('loading');
+const locationResults = document.getElementById('location-results');
+const searchContainer= document.querySelector('.search-container')
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
     updateDate();
     getWeatherByLocation(); // Try to get user's location by default
-    
+
     // Event listeners
     searchBtn.addEventListener('click', handleSearch);
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleSearch();
+    })
+    searchInput.addEventListener('input', function() {
+        if (this.value.trim() === ''){
+            locationResults.style.display = 'none';
+            locationResults.innerHTML = '';
+        }
     });
-    locationBtn.addEventListener('click', getWeatherByLocation);
-});
+    searchInput.addEventListener('blur', function() {
+        if (this.value.trim() === ''){
+            locationResults.style.display = 'none';
+            locationResults.innerHTML = '';
+        }
+    });
 
+    locationBtn.addEventListener('click', getWeatherByLocation);
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.search-container')){
+            locationResults.style.display = 'none';
+        }
+    })
+
+    document.addEventListener('click', (e) => {
+        if (!searchContainer.contains(e.targer)) {
+            locationResults.style.display = 'none';
+        }
+    })
+});
 function handleSearch() {
     const query = searchInput.value.trim();
     if (query) {
-        getWeatherByCity(query);
+        getLocationOptions(query);
     }
 }
 
-// Get weather by city name, country, or region
-async function getWeatherByCity(query) {
+//  Fetch and display location options
+async function getLocationOptions(query) {
     showLoading();
     try {
-        // Get coordinates first
-        const geoData = await fetch(`${GEOCODING_API_URL}/direct?q=${query}&limit=5&appid=${WEATHER_API_KEY}`);
-        const geoJson = await geoData.json();
-        
-        if (geoJson.length === 0) {
-           alert('Location not found. Please ensure you enter the correct location.');
-            hideLoading();
-            return;
-        }
-        
-        // Use the first result by default, which is often the most relevant administrative division
-        const { lat, lon, name, country, state } = geoJson[0];
-        
-        // Update search input with the official location name
-        const displayName = state ? `${name}, ${state}, ${country}` : `${name}, ${country}`;
-        searchInput.value = displayName;
-        
-        // Get all weather data
-        await Promise.all([
-            updateWeatherData(lat, lon, name, country, state),
-            
-        ]);
-        
-        
-        // Re-fetching weatherData here is redundant if updateWeatherData already does it and passes it
-        
-    
-        const weatherDataNotification = await fetch(`${WEATHER_API_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${WEATHER_API_KEY}`);
-        const weatherJsonNotification = await weatherDataNotification.json();
-        const weatherMainNotification = weatherJsonNotification.weather[0].main;
-        if (['Rain', 'Thunderstorm', 'Snow'].includes(weatherMainNotification)) {
-            showNotification('Weather Alert', `Expect ${weatherMainNotification.toLowerCase()} in your area.`);
-        }
-        
-    } catch (error) {
-        console.error('Error fetching weather data:', error);
-       // alert('Error fetching weather data. Please try again.');
+      const geoData = await fetch(`${GEOCODING_API_URL}/direct?q=${query}&limit=7&appid=${WEATHER_API_KEY}`);
+      const geoJson = await geoData.json();
+      
+      if (geoJson.length === 0) {
+        alert('Location not found ensure you enter the correct location');
+        return;
+      }
+      
+      displayLocationResults(geoJson);
     } finally {
-        hideLoading();
+      hideLoading();
     }
-}
+  }
+  
+  //  Display location results in dropdown
+  function displayLocationResults(locations) {
+    locationResults.innerHTML = '';
+    locationResults.style.display = 'block';
+    locations.forEach(location => {
+      const { name, country, state, lat, lon } = location;
+      const resultElement = document.createElement('div');
+      resultElement.className = 'location-result';
+      resultElement.innerHTML = `
+        <i class="fas fa-map-marker-alt"></i>
+        <div class="location-text">
+          <div class="location-name">${name}</div>
+          <div class="location-details">${state ? state + ', ' : ''}${country}</div>
+        </div>
+      `;
+      
+      resultElement.addEventListener('click', () => {
+        searchInput.value = state ? `${name}, ${state}, ${country}` : `${name}, ${country}`;
+        locationResults.style.display = 'none';
+        getWeatherByCoordinates(lat, lon, name, country, state);
+      });
+      
+      locationResults.appendChild(resultElement);
+    });
+    
+    locationResults.style.display = 'block';
+  }
+  
+  //   function to get weather by coordinates
+  async function getWeatherByCoordinates(lat, lon, name, country, state) {
+    showLoading();
+    try {
+        await getWeatherByCoordinates(latitude, longitude, name, country, state);
+      
+      // Notification logic 
+      const weatherData = await fetch(`${WEATHER_API_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${WEATHER_API_KEY}`);
+      const weatherJson = await weatherData.json();
+      const weatherMain = weatherJson.weather[0].main;
+      
+      if (['Rain', 'Thunderstorm', 'Snow'].includes(weatherMain)) {
+        showNotification('Weather Alert', `Expect ${weatherMain.toLowerCase()} in your area.`);
+      }
+    } finally {
+      hideLoading();
+    }
+  }
 
 // Get weather by user's location
 function getWeatherByLocation() {
@@ -102,7 +147,7 @@ function getWeatherByLocation() {
                     
                     // Get all weather data
                     await Promise.all([
-                        updateWeatherData(latitude, longitude, name, country, state),
+                        getWeatherByCoordinates(latitude, longitude, name, country, state),
                         
                     ]);
                     
@@ -123,18 +168,22 @@ function getWeatherByLocation() {
             },
             (error) => {
                 console.error('Geolocation error:', error);
+                hideLoading();
+                alert("Location access denied. Please ensure your location is on ")
                 // Fallback to a default city if location access is denied or fails
-                getWeatherByCity("Abuja");
+                getWeatherByCoordinates(9.05785, 7.49508, "Abuja", "NG", "Federal Captital Territory");
             }
         );
     } else {
+        hideLoading();
+                alert("Geolocation not supported ")
         // Geolocation not supported - fallback to default city
-        getWeatherByCity("Abuja");
+        getWeatherByCoordinates(9.05785, 7.49508, "Abuja", "NG", "Federal Captital Territory");
     }
 }
 
 // Update all weather data for a location
-async function updateWeatherData(lat, lon, name, country, state) {
+async function getWeatherByCoordinates(lat, lon, name, country, state) {
     try {
         const [weatherDataResponse, forecastDataResponse] = await Promise.all([
             fetch(`${WEATHER_API_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${WEATHER_API_KEY}`),

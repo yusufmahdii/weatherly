@@ -50,6 +50,7 @@ header h1 {
 }
 
 .search-container {
+    position: relative;
     display: flex;
     width: 100%;
     max-width: 500px;
@@ -87,6 +88,52 @@ header h1 {
     transform: translateY(-2px);
 }
 
+
+#location-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    background: var(--secondary-color);
+    border-radius: 0 0 var(--border-radius) var(--border-radius);
+    margin-top: 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: var(--box-shadow);
+    display: none;
+    border-top: none;
+  }
+  
+  .location-result {
+    padding: 12px 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: background-color 0.2s;
+  }
+  
+  .location-result:hover {
+    background-color: rgba(52, 152, 219, 0.3);
+  }
+  
+  .location-result i {
+    color: var(--accent-color);
+  }
+  
+  .location-text {
+    flex: 1;
+  }
+  
+  .location-name {
+    font-weight: 600;
+  }
+  
+  .location-details {
+    font-size: 0.85rem;
+    opacity: 0.8;
+  }
 .current-weather {
     background: var(--card-bg);
     backdrop-filter: blur(10px);
@@ -376,14 +423,17 @@ footer {
         grid-template-columns: 1fr;
     }
     
-    .map-container {
-        height: 300px;
-    }
+    
 }
 
 @media (max-width: 480px) {
     .search-container {
         flex-direction: column;
+    }
+    #location-results {
+        position: fixed;
+        width: calc(100% - 40px);
+        left: 20px;
     }
     
     #search-input, #search-btn, #location-btn {

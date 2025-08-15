@@ -12,6 +12,7 @@ const locationBtn = document.getElementById('location-btn');
 const loading = document.getElementById('loading');
 const locationResults = document.getElementById('location-results');
 const searchContainer= document.querySelector('.search-container')
+let searchTimeout;
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', () => {
@@ -26,9 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Listen for input to show results dynamically
     searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
         const query = this.value.trim();
-        if (query.length > 2) { // You can adjust the minimum length
-             getLocationOptions(query);
+        if (query.length > 2) {
+            searchTimeout = setTimeout(() => {
+             getLocationOptions(query, false);
+            } , 250);
         } else {
             locationResults.style.display = 'none';
             locationResults.innerHTML = '';
@@ -45,25 +49,30 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 });
 
+// function to handle the search button
 function handleSearch() {
     const query = searchInput.value.trim();
     if (query) {
-        getLocationOptions(query);
+        getLocationOptions(query, true);
     }
 }
 
 //  Fetch and display location options
 async function getLocationOptions(query) {
-    showLoading();
+    hideLoading();
     try {
       const geoData = await fetch(`${GEOCODING_API_URL}/direct?q=${query}&limit=7&appid=${WEATHER_API_KEY}`);
       const geoJson = await geoData.json();
       
       if (geoJson.length === 0) {
-        alert('Location not found ensure you enter the correct location');
+        locationResults.style.display = 'none';
+        locationResults.innerHTML = '';
+        if (showAlertIfNotFound) {
+
+          alert('Location not found ensure you enter the correct location');
         return;
       }
-      
+    }  
       displayLocationResults(geoJson);
     } finally {
       hideLoading();
@@ -72,24 +81,14 @@ async function getLocationOptions(query) {
   
   //  Display location results in dropdown
   function displayLocationResults(locations) {
-    locationResults.innerHTML = '';
-    
-    // Set positioning based on screen size
-    if (window.innerWidth <= 768) {
-      const inputRect = searchInput.getBoundingClientRect();
-      locationResults.style.position = 'fixed';
-      // Use client coordinates directly for fixed positioning, no need for window.scrollY
-      locationResults.style.top = `${inputRect.bottom}px`; 
-      locationResults.style.left = `${inputRect.left}px`;
-      locationResults.style.width = `${inputRect.width}px`;
-      locationResults.style.maxWidth = 'none';
-    } else {
+    locationResults.innerHTML = '';   
       locationResults.style.position = 'absolute';
       locationResults.style.top = '100%';
       locationResults.style.left = '0';
       locationResults.style.width = '100%';
       locationResults.style.maxWidth = '500px';
-    }
+      locationResults.style.maxHeight='60vh';
+    
   
     // Add location results
     locations.forEach(location => {

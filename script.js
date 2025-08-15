@@ -23,46 +23,28 @@ document.addEventListener('DOMContentLoaded', () => {
     searchInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') handleSearch();
     })
+    
+    // Listen for input to show results dynamically
     searchInput.addEventListener('input', function() {
         const query = this.value.trim();
-        if (this.value.trim() === ''){
+        if (query.length > 2) { // You can adjust the minimum length
+             getLocationOptions(query);
+        } else {
             locationResults.style.display = 'none';
             locationResults.innerHTML = '';
         }
     });
-    searchInput.addEventListener('blur', function() {
-        if (this.value.trim() === ''){
-            locationResults.style.display = 'none';
-            locationResults.innerHTML = '';
-        }
-    });
-    window.addEventListener('resize', () => {
-        if (locationResults.style.display === 'block') {
-          displayLocationResults([]); // Recalculate position
-        }
-      });
-      
-      // Close dropdown when scrolling on mobile
-      window.addEventListener('scroll', () => {
-        if (window.innerWidth <= 768 && locationResults.style.display === 'block') {
-          locationResults.style.display = 'none';
-        }
-      });
 
     locationBtn.addEventListener('click', getWeatherByLocation);
 
+    // This single, corrected event listener handles clicks outside the search container.
     document.addEventListener('click', (e) => {
-        if (!e.target.closest('.search-container')){
-            locationResults.style.display = 'none';
-        }
-    })
-
-    document.addEventListener('click', (e) => {
-        if (!searchContainer.contains(e.targer)) {
+        if (!searchContainer.contains(e.target)) {
             locationResults.style.display = 'none';
         }
     })
 });
+
 function handleSearch() {
     const query = searchInput.value.trim();
     if (query) {
@@ -91,20 +73,22 @@ async function getLocationOptions(query) {
   //  Display location results in dropdown
   function displayLocationResults(locations) {
     locationResults.innerHTML = '';
-    const inputRect = searchInput.getBoundingClientRect();
     
-    // Mobile positioning
+    // Set positioning based on screen size
     if (window.innerWidth <= 768) {
+      const inputRect = searchInput.getBoundingClientRect();
       locationResults.style.position = 'fixed';
-      locationResults.style.top = `${inputRect.bottom + window.scrollY}px`;
+      // Use client coordinates directly for fixed positioning, no need for window.scrollY
+      locationResults.style.top = `${inputRect.bottom}px`; 
       locationResults.style.left = `${inputRect.left}px`;
       locationResults.style.width = `${inputRect.width}px`;
+      locationResults.style.maxWidth = 'none';
     } else {
-      // Desktop positioning
       locationResults.style.position = 'absolute';
       locationResults.style.top = '100%';
       locationResults.style.left = '0';
       locationResults.style.width = '100%';
+      locationResults.style.maxWidth = '500px';
     }
   
     // Add location results
@@ -120,7 +104,9 @@ async function getLocationOptions(query) {
         </div>
       `;
       
-      resultElement.addEventListener('click', () => {
+      resultElement.addEventListener('click', (e) => {
+        // Prevent the input from losing focus immediately, which would close the dropdown
+        e.preventDefault(); 
         searchInput.value = state ? `${name}, ${state}, ${country}` : `${name}, ${country}`;
         locationResults.style.display = 'none';
         getWeatherByCoordinates(lat, lon, name, country, state);
@@ -136,13 +122,22 @@ async function getLocationOptions(query) {
   async function getWeatherByCoordinates(lat, lon, name, country, state) {
     showLoading();
     try {
-        await getWeatherByCoordinates(latitude, longitude, name, country, state);
+      const [weatherDataResponse, forecastDataResponse] = await Promise.all([
+        fetch(`${WEATHER_API_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${WEATHER_API_KEY}`),
+        fetch(`${FORECAST_API_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${WEATHER_API_KEY}`)
+      ]);
       
+      const weatherJson = await weatherDataResponse.json();
+      const forecastJson = await forecastDataResponse.json();
+      
+      // Update UI
+      const displayName = state ? `${name}, ${state}, ${country}` : `${name}, ${country}`;
+      updateCurrentWeather(weatherJson, displayName);
+      updateForecast(forecastJson);
+      updateAirQuality(lat, lon);
+
       // Notification logic 
-      const weatherData = await fetch(`${WEATHER_API_URL}?lat=${lat}&lon=${lon}&units=metric&appid=${WEATHER_API_KEY}`);
-      const weatherJson = await weatherData.json();
       const weatherMain = weatherJson.weather[0].main;
-      
       if (['Rain', 'Thunderstorm', 'Snow'].includes(weatherMain)) {
         showNotification('Weather Alert', `Expect ${weatherMain.toLowerCase()} in your area.`);
       }
@@ -175,18 +170,7 @@ function getWeatherByLocation() {
                     searchInput.value = displayName;
                     
                     // Get all weather data
-                    await Promise.all([
-                        getWeatherByCoordinates(latitude, longitude, name, country, state),
-                        
-                    ]);
-                    
-                    // Show notification for precipitation
-                    const weatherDataNotification = await fetch(`${WEATHER_API_URL}?lat=${latitude}&lon=${longitude}&units=metric&appid=${WEATHER_API_KEY}`);
-                    const weatherJsonNotification = await weatherDataNotification.json();
-                    const weatherMainNotification = weatherJsonNotification.weather[0].main;
-                    if (['Rain', 'Thunderstorm', 'Snow'].includes(weatherMainNotification)) {
-                        showNotification('Weather Alert', `Expect ${weatherMainNotification.toLowerCase()} in your area.`);
-                    }
+                    await getWeatherByCoordinates(latitude, longitude, name, country, state);
                     
                 } catch (error) {
                     console.error('Error fetching location data:', error);
@@ -205,7 +189,7 @@ function getWeatherByLocation() {
         );
     } else {
         hideLoading();
-                alert("Geolocation not supported ")
+        alert("Geolocation not supported ")
         // Geolocation not supported - fallback to default city
         getWeatherByCoordinates(9.05785, 7.49508, "Abuja", "NG", "Federal Captital Territory");
     }
@@ -227,7 +211,6 @@ async function getWeatherByCoordinates(lat, lon, name, country, state) {
         updateCurrentWeather(weatherJson, displayName);
         updateForecast(forecastJson);
         updateAirQuality(lat, lon);
-        updateWeatherMap(lat, lon);
     } catch (error) {
         console.error('Error updating weather data:', error);
         throw error;

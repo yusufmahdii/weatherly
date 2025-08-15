@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.key === 'Enter') handleSearch();
     })
     searchInput.addEventListener('input', function() {
+        const query = this.value.trim();
         if (this.value.trim() === ''){
             locationResults.style.display = 'none';
             locationResults.innerHTML = '';
@@ -35,6 +36,18 @@ document.addEventListener('DOMContentLoaded', () => {
             locationResults.innerHTML = '';
         }
     });
+    window.addEventListener('resize', () => {
+        if (locationResults.style.display === 'block') {
+          displayLocationResults([]); // Recalculate position
+        }
+      });
+      
+      // Close dropdown when scrolling on mobile
+      window.addEventListener('scroll', () => {
+        if (window.innerWidth <= 768 && locationResults.style.display === 'block') {
+          locationResults.style.display = 'none';
+        }
+      });
 
     locationBtn.addEventListener('click', getWeatherByLocation);
 
@@ -78,7 +91,23 @@ async function getLocationOptions(query) {
   //  Display location results in dropdown
   function displayLocationResults(locations) {
     locationResults.innerHTML = '';
-    locationResults.style.display = 'block';
+    const inputRect = searchInput.getBoundingClientRect();
+    
+    // Mobile positioning
+    if (window.innerWidth <= 768) {
+      locationResults.style.position = 'fixed';
+      locationResults.style.top = `${inputRect.bottom + window.scrollY}px`;
+      locationResults.style.left = `${inputRect.left}px`;
+      locationResults.style.width = `${inputRect.width}px`;
+    } else {
+      // Desktop positioning
+      locationResults.style.position = 'absolute';
+      locationResults.style.top = '100%';
+      locationResults.style.left = '0';
+      locationResults.style.width = '100%';
+    }
+  
+    // Add location results
     locations.forEach(location => {
       const { name, country, state, lat, lon } = location;
       const resultElement = document.createElement('div');

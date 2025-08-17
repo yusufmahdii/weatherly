@@ -29,14 +29,12 @@ body {
     padding: 20px;
 }
 
-/* Header and Search Bar */
 header {
     display: flex;
     flex-direction: column;
     align-items: center;
     margin-bottom: 30px;
     padding: 20px 0;
-    /* Corrected: Use position and z-index to ensure header is on top of other content */
     position: relative;
     z-index: 20; 
 }
@@ -96,7 +94,6 @@ header h1 {
     color: var(--accent-color);
 }
 
-/* Location Results Dropdown */
 #location-results {
     position: absolute;
     top: 100%;
@@ -144,15 +141,13 @@ header h1 {
     color: rgba(236, 240, 241, 0.8);
 }
 
-/* Main Content Sections */
 main {
     display: flex;
     flex-direction: column;
     gap: 30px;
-    z-index: 1; /* Ensure main content is below the header's z-index */
+    z-index: 1; 
 }
 
-/* Current Weather Section */
 .current-weather {
     display: flex;
     flex-direction: column;
@@ -224,7 +219,7 @@ main {
     margin-right: 10px;
 }
 
-/* Additional Info Section */
+
 .additional-info {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -243,12 +238,12 @@ main {
 .info-card h4 {
     margin-bottom: 15px;
     font-size: 1.2rem;
-    color: var(--accent-color);
+    color: rgba(236, 240, 241, 0.8);
 }
 
 .info-card i {
     font-size: 2.5rem;
-    color: var(--text-color);
+    color: rgba(236, 240, 241, 0.8);
     margin-bottom: 10px;
 }
 
@@ -265,7 +260,7 @@ main {
 .sun-times i {
     font-size: 1.5rem;
     margin: 0;
-    color: var(--text-color);
+    color: rgba(236, 240, 241, 0.8);
 }
 
 .sun-times div {
@@ -284,7 +279,6 @@ main {
     margin-bottom: 10px;
 }
 
-/* Forecast Section */
 .forecast-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -303,7 +297,7 @@ main {
 .forecast-day {
     font-weight: bold;
     font-size: 1.1rem;
-    color: var(--accent-color);
+    color: rgba(236, 240, 241, 0.8);
     margin-bottom: 10px;
 }
 
@@ -333,7 +327,6 @@ main {
     color: rgba(236, 240, 241, 0.5);
 }
 
-/* Advice and Alerts */
 .advice-container, .alerts-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -354,7 +347,7 @@ main {
 .advice-icon, .alert-icon {
     font-size: 2.5rem;
     margin-right: 20px;
-    color: var(--accent-color);
+    color: rgba(236, 240, 241, 0.8);
 }
 
 .advice-content h4, .alert-content h4 {
@@ -367,7 +360,6 @@ main {
     color: rgba(236, 240, 241, 0.8);
 }
 
-/* Footer */
 footer {
     text-align: center;
     margin-top: 30px;
@@ -376,7 +368,6 @@ footer {
     color: rgba(236, 240, 241, 0.6);
 }
 
-/* Loading Spinner */
 .loading {
     position: fixed;
     top: 0;
@@ -411,7 +402,6 @@ footer {
     to { transform: rotate(360deg); }
 }
 
-/* Responsive styles */
 @media (max-width: 768px) {
     header h1 {
         font-size: 2rem;
@@ -435,12 +425,11 @@ footer {
     }
     
     .search-container {
-        z-index: 10; /* Lower z-index for mobile, but still above the main content */
+        z-index: 10; 
     }
 
     #location-results {
-        /* Corrected: Removed conflicting top/bottom auto properties for fixed positioning */
-        position: fixed;
+        position: absolute;
         width: calc(100% - 40px);
         left: 20px;
         max-height: 60vh;

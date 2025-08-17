@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     locationBtn.addEventListener('click', getWeatherByLocation);
 
-    // This single, corrected event listener handles clicks outside the search container.
+    // This event listener handles clicks outside the search container.
     document.addEventListener('click', (e) => {
         if (!searchContainer.contains(e.target)) {
             locationResults.style.display = 'none';
@@ -274,7 +274,7 @@ function updateCurrentWeather(data, location) {
 
     document.getElementById('sunrise').textContent = formatTimeWithCityOffset(data.sys.sunrise, data.timezone);
     document.getElementById('sunset').textContent = formatTimeWithCityOffset(data.sys.sunset, data.timezone);
-    // --- END FIX FOR SUNRISE AND SUNSET ---
+    // ---  SUNRISE AND SUNSET ---
     
     // UV index (simulated based on temperature and conditions)
     let uvIndex;
@@ -330,7 +330,7 @@ function updateForecast(data) {
     
     // Get the next 5 days
     // Slice to ensure we only get 5 distinct days (the keys are date strings)
-    const forecastDays = Object.values(dailyForecast).slice(0, 5);
+    const forecastDays = Object.values(dailyForecast).slice(1, 6);
     
     forecastDays.forEach(day => {
         // Ensure toLocaleDateString formats day name based on the adjusted date object

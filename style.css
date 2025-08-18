@@ -279,6 +279,39 @@ main {
     margin-bottom: 10px;
 }
 
+.hourly-forecast-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 15px;
+    padding: 10px;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+}
+
+.hourly-forecast-item {
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    padding: 15px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+    flex: 0 0 auto; 
+    width: 100px; 
+    scroll-snap-align: start;
+}
+
+.hourly-forecast-time {
+    font-weight: bold;
+    font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.hourly-forecast-temp {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--text-color);
+}
+
 .forecast-container {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -414,6 +447,16 @@ footer {
     
     .temperature h1 {
         font-size: 3rem;
+    }
+
+    .hourly-forecast-container {
+        
+        width: 100%;
+        gap: 10px;
+    }
+    
+    .hourly-forecast-item {
+        width: 80px; 
     }
     
     .forecast-container, .cities-container {

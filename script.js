@@ -58,7 +58,7 @@ function handleSearch() {
 }
 
 //  Fetch and display location options
-async function getLocationOptions(query) {
+async function getLocationOptions(query, showAlertIfNotFound) {
     hideLoading();
     try {
       const geoData = await fetch(`${GEOCODING_API_URL}/direct?q=${query}&limit=7&appid=${WEATHER_API_KEY}`);
@@ -68,11 +68,10 @@ async function getLocationOptions(query) {
         locationResults.style.display = 'none';
         locationResults.innerHTML = '';
         if (showAlertIfNotFound) {
-
           alert('Location not found ensure you enter the correct location');
+        }
         return;
       }
-    }  
       displayLocationResults(geoJson);
     } finally {
       hideLoading();
@@ -132,6 +131,7 @@ async function getLocationOptions(query) {
       // Update UI
       const displayName = state ? `${name}, ${state}, ${country}` : `${name}, ${country}`;
       updateCurrentWeather(weatherJson, displayName);
+      updateHourlyForecast(forecastJson);
       updateForecast(forecastJson);
       updateAirQuality(lat, lon);
 
@@ -208,6 +208,7 @@ async function getWeatherByCoordinates(lat, lon, name, country, state) {
         // Update UI
         const displayName = state ? `${name}, ${state}, ${country}` : `${name}, ${country}`;
         updateCurrentWeather(weatherJson, displayName);
+        updateHourlyForecast(forecastJson);
         updateForecast(forecastJson);
         updateAirQuality(lat, lon);
     } catch (error) {
@@ -297,6 +298,30 @@ function updateCurrentWeather(data, location) {
     
     // Update weather alerts
     updateWeatherAlerts(data);
+}
+
+//hourly forecast UI
+function updateHourlyForecast(data) {
+    const hourlyContainer = document.getElementById('hourly-forecast-container');
+    hourlyContainer.innerHTML = '';
+
+    // Get the next 24 hours (8 items, as each item is 3 hours)
+    data.list.slice(0, 8).forEach(item => {
+        const date = new Date((item.dt + data.city.timezone) * 1000);
+        const hours = date.getUTCHours();
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const formattedHours = hours % 12 || 12; // Convert 0 to 12 for 12 AM
+        
+        const hourlyItem = document.createElement('div');
+        hourlyItem.className = 'hourly-forecast-item';
+        hourlyItem.innerHTML = `
+            <div class="hourly-forecast-time">${formattedHours} ${ampm}</div>
+            <img class="forecast-icon" src="https://openweathermap.org/img/wn/${item.weather[0].icon}.png" alt="${item.weather[0].main}">
+            <div class="hourly-forecast-temp">${Math.round(item.main.temp)}°</div>
+        `;
+        
+        hourlyContainer.appendChild(hourlyItem);
+    });
 }
 
 // Update forecast UI
@@ -678,12 +703,10 @@ function showNotification(title, message) {
     }
 }
 
-// Show loading spinner
 function showLoading() {
     loading.style.display = 'flex';
 }
 
-// Hide loading spinner
 function hideLoading() {
     loading.style.display = 'none';
 }
